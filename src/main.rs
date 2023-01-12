@@ -44,7 +44,7 @@ impl ResultStore {
 }
 
 fn a(running: Arc<AtomicBool>) -> u128 {
-    taskset(1);
+    taskset(0);
     let mut count = 0u128;
     while running.load(Relaxed) {
         count += 1;
@@ -55,7 +55,7 @@ fn a(running: Arc<AtomicBool>) -> u128 {
 }
 
 fn b(running: Arc<AtomicBool>) -> ResultStore {
-    taskset(2);
+    taskset(1);
     let mut result_store = ResultStore::new();
     while running.load(Relaxed) {
         let y = Y.load(Relaxed);
