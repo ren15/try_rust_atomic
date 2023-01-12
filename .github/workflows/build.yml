@@ -1,0 +1,24 @@
+name: ci
+
+on: push
+
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    container:
+      image: rust:1.65.0
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: prepare system
+      run: |
+        export DEBIAN_FRONTEND=noninteractive
+        # apt-get update && apt-get install -y \
+        #   build-essential git cmake \
+        #   clang \
+        #   libstdc++-10-dev libssl-dev libxxhash-dev zlib1g-dev pkg-config
+    - name: run
+      run: |
+        cargo run --release

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicI32, Ordering::Relaxed};
 use std::sync::Arc;
 
@@ -6,6 +7,26 @@ static Y: AtomicI32 = AtomicI32::new(0);
 
 fn taskset(cpuid: usize) {
     core_affinity::set_for_current(core_affinity::CoreId { id: cpuid });
+}
+
+struct ResultStore {
+    result: HashMap<(i32, i32), u128>,
+}
+
+impl ResultStore {
+    fn new() -> Self {
+        Self {
+            result: HashMap::new(),
+        }
+    }
+
+    fn add(&mut self, x: i32, y: i32) {
+        if let Some(c) = self.result.get_mut(&(x, y)) {
+            *c += 1u128;
+        } else {
+            self.result.insert((x, y), 1u128);
+        }
+    }
 }
 
 fn a(running: Arc<AtomicBool>) -> u128 {
@@ -19,54 +40,41 @@ fn a(running: Arc<AtomicBool>) -> u128 {
     count
 }
 
-fn b(x_a: i32, y_a: i32) -> u128 {
+fn b(running: Arc<AtomicBool>) -> ResultStore {
     taskset(2);
-    let mut count = 0u128;
-    loop {
-        count += 1;
+    let mut result_store = ResultStore::new();
+    while running.load(Relaxed) {
         let y = Y.load(Relaxed);
         let x = X.load(Relaxed);
         X.store(0, Relaxed);
         Y.store(0, Relaxed);
-        if x == x_a && y == y_a {
-            return count;
-        }
-    }
-}
-
-fn test_avg(x_a: i32, y_a: i32, iter_cnt: usize) {
-    println!("trying: x: {}, y: {}", x_a, y_a);
-
-    let mut a_count_v = vec![];
-    let mut b_count_v = vec![];
-
-    for _ in 0..iter_cnt {
-        let running = Arc::new(AtomicBool::new(true));
-
-        let a_th = {
-            let running = running.clone();
-            std::thread::spawn(move || a(running))
-        };
-        let b_th = std::thread::spawn(move || b(x_a, y_a));
-
-        b_count_v.push(b_th.join().unwrap());
-        running.store(false, Relaxed);
-        a_count_v.push(a_th.join().unwrap());
+        result_store.add(x, y);
     }
 
-    let a_count_avg = a_count_v.iter().sum::<u128>() as f64 / a_count_v.len() as f64;
-    let b_count_avg = b_count_v.iter().sum::<u128>() as f64 / b_count_v.len() as f64;
-    println!("a thread joined at count: {}", a_count_avg);
-    println!("b thread joined at count: {}", b_count_avg);
-
-    println!("x: {}, y: {} happened from b's view", x_a, y_a);
-    println!("--------------------------------");
+    result_store
 }
 
 fn main() {
-    let iter_cnt = 1;
-    test_avg(0, 0, iter_cnt);
-    test_avg(10, 0, iter_cnt);
-    test_avg(10, 20, iter_cnt);
-    test_avg(0, 20, iter_cnt);
+    let running = Arc::new(AtomicBool::new(true));
+
+    let a_th = {
+        let running = running.clone();
+        std::thread::spawn(move || a(running))
+    };
+
+    let b_th = {
+        let running = running.clone();
+        std::thread::spawn(move || b(running))
+    };
+
+    println!("Running for 10s...");
+    std::thread::sleep(std::time::Duration::from_secs(10));
+
+    running.store(false, Relaxed);
+
+    let result_store = b_th.join().unwrap();
+    let a_iter = a_th.join().unwrap();
+
+    println!("a_iter: {}", a_iter);
+    println!("result: {:?}", result_store.result);
 }
