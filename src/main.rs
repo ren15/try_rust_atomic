@@ -27,6 +27,20 @@ impl ResultStore {
             self.result.insert((x, y), 1u128);
         }
     }
+    fn print(&self) {
+        let sum = self.result.values().sum::<u128>();
+        println!("b_iter: {}", sum);
+
+        for ((x, y), c) in &self.result {
+            println!(
+                "({:2}, {:2}) = {:10}  {:.3}%",
+                x,
+                y,
+                c,
+                (c * 100) as f64 / sum as f64
+            );
+        }
+    }
 }
 
 fn a(running: Arc<AtomicBool>) -> u128 {
@@ -76,5 +90,5 @@ fn main() {
     let a_iter = a_th.join().unwrap();
 
     println!("a_iter: {}", a_iter);
-    println!("result: {:?}", result_store.result);
+    result_store.print();
 }
