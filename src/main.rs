@@ -43,8 +43,8 @@ impl ResultStore {
     }
 }
 
-fn a(running: Arc<AtomicBool>) -> u128 {
-    taskset(1);
+fn a(running: Arc<AtomicBool>, cpuid: usize) -> u128 {
+    taskset(cpuid);
     let mut count = 0u128;
     while running.load(Relaxed) {
         count += 1;
@@ -54,8 +54,8 @@ fn a(running: Arc<AtomicBool>) -> u128 {
     count
 }
 
-fn b(running: Arc<AtomicBool>) -> ResultStore {
-    taskset(2);
+fn b(running: Arc<AtomicBool>, cpuid: usize) -> ResultStore {
+    taskset(cpuid);
     let mut result_store = ResultStore::new();
     while running.load(Relaxed) {
         let y = Y.load(Relaxed);
@@ -73,16 +73,16 @@ fn main() {
 
     let a_th = {
         let running = running.clone();
-        std::thread::spawn(move || a(running))
+        std::thread::spawn(move || a(running, 1))
     };
 
     let b_th = {
         let running = running.clone();
-        std::thread::spawn(move || b(running))
+        std::thread::spawn(move || b(running, 2))
     };
 
     println!("Running for 10s...");
-    std::thread::sleep(std::time::Duration::from_secs(10));
+    std::thread::sleep(std::time::Duration::from_secs(5));
 
     running.store(false, Relaxed);
 
