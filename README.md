@@ -7,24 +7,11 @@ cargo r --release
 
 You will get output like:
 ```bash
-trying: x: 0, y: 0
-b thread joined at count: 2
-a thread joined
-x: 0, y: 0 happened
---------------------------------
-trying: x: 10, y: 0
-b thread joined at count: 365887
-a thread joined
-x: 10, y: 0 happened
---------------------------------
-trying: x: 10, y: 20
-b thread joined at count: 1
-a thread joined
-x: 10, y: 20 happened
---------------------------------
-trying: x: 0, y: 20
-b thread joined at count: 1006524053
-a thread joined
-x: 0, y: 20 happened
---------------------------------
+Running for 10s...
+a_iter: 131730996
+b_iter: 56274065
+(10,  0) =   52946676  94.087%
+(10, 20) =    2220297  3.946%
+( 0,  0) =    1106986  1.967%
+( 0, 20) =        106  0.000%
 ```
