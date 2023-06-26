@@ -1,4 +1,8 @@
-# How to run
+# Why this repo
+
+This repo demostrates that `std::sync::atomic::Ordering::Relaxed` will have ordering "issues" that surprise people who don't have experience in atmoic programming. The code is derieved from examples in https://marabos.nl/atomics/ 
+
+## How to run
 
 
 ```bash
@@ -15,3 +19,5 @@ b_iter: 56274065
 ( 0,  0) =    1106986  1.967%
 ( 0, 20) =        106  0.000%
 ```
+
+Some people will expect the result to be 100% (10,0)
