@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: ubuntu-20.04
     container:
-      image: rust:1.66.1
+      image: rust:1-slim
 
     steps:
     - uses: actions/checkout@v3
